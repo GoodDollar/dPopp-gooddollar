@@ -1,0 +1,10 @@
+{
+  "files": [],
+  "references": [
+    { "path": "app" },
+    { "path": "iam" },
+    { "path": "identity" },
+    { "path": "types" }
+  ],
+  "exclude": ["node_modules"]
+}

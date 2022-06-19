@@ -1,0 +1,16 @@
+{
+  "packages": [
+    "app",
+    "database-client",
+    "iam",
+    "identity",
+    "schemas",
+    "types"
+  ],
+  "npmClient": "yarn",
+  "version": "independent",
+  "useWorkspaces": true,
+  "stream": true,
+  "changelogPreset": "angular",
+  "useNx": false
+}

@@ -16,6 +16,7 @@
     "jsx": "preserve",
     "incremental": true,
     "downlevelIteration": true,
+    "composite": true
   },
   "include": [
     "next-env.d.ts",

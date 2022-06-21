@@ -9,6 +9,7 @@
     "moduleResolution": "node",
     "sourceMap": true,
     "outDir": "dist",
+    "composite": true,
     "baseUrl": ".",
     "paths": {
       "*": ["../node_modules/*", "node_modules/*"]

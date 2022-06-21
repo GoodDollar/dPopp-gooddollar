@@ -132,7 +132,7 @@ export default function Dashboard() {
               <div>
                 <button
                   data-testid="button-passport-json"
-                  className="float-right rounded-md border-2 border-gray-300 py-2 px-6 text-black"
+                  className="float-right rounded-md border-2 border-gray-300 px-6 py-2 text-black"
                   onClick={onOpen}
                 >{`</> Passport JSON`}</button>
 

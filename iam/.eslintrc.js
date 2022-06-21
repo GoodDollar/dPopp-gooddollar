@@ -35,7 +35,7 @@ module.exports = {
     "@typescript-eslint/no-misused-promises": 1,
     "@typescript-eslint/no-floating-promises": 1,
     "@typescript-eslint/no-unsafe-assignment": "warn",
-    "prettier/prettier": [ "error", {"endOfLine": "auto"}]
+    // "prettier/prettier": "off"s
   },
   settings: {
     "import/resolver": {

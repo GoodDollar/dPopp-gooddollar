@@ -9,7 +9,7 @@ module.exports = {
         printWidth: 120,
         singleQuote: false,
         semi: true,
-        endOfLine: true
+        endOfLine: 'auto'
       },
     },
   ],

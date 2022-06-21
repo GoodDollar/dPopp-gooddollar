@@ -34,6 +34,8 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const [viewerConnection, ceramicConnect] = useViewerConnection();
+
+  // console.log('Dashboard --> viewerConnection/ceramicConnect --', {viewerConnection, ceramicConnect})
   const { isOpen: retryModalIsOpen, onOpen: onRetryModalOpen, onClose: onRetryModalClose } = useDisclosure();
 
   // Route user to home when wallet is disconnected
@@ -46,6 +48,7 @@ export default function Dashboard() {
   // Allow user to retry Ceramic connection if failed
   const retryConnection = () => {
     if (isLoadingPassport == undefined && wallet) {
+      // console.log('retrying connection . . .')
       ceramicConnect(new EthereumAuthProvider(wallet.provider, wallet.accounts[0].address));
       onRetryModalClose();
     }
@@ -70,7 +73,7 @@ export default function Dashboard() {
       <ModalContent>
         <ModalBody mt={4}>
           <div className="flex flex-row">
-            <div className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 sm:mr-10">
+            <div className="inline-flex items-center justify-center flex-shrink-0 w-10 h-10 bg-purple-100 rounded-full sm:mr-10">
               <img alt="shield-exclamation-icon" src="./assets/shield-exclamation-icon.svg" />
             </div>
             <div className="flex flex-col" data-testid="retry-modal-content">
@@ -97,15 +100,15 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="flex w-full flex-col flex-wrap border-b-2 p-5 md:flex-row">
-        <div className="float-right mb-4 flex flex-row items-center font-medium text-gray-900 md:mb-0">
+      <div className="flex flex-col flex-wrap w-full p-5 border-b-2 md:flex-row">
+        <div className="flex flex-row items-center float-right mb-4 font-medium text-gray-900 md:mb-0">
           <img src="/assets/gitcoinLogoDark.svg" alt="Gitcoin Logo" />
           <img className="ml-6 mr-6" src="/assets/logoLine.svg" alt="Logo Line" />
           <img src="/assets/passportLogoBlack.svg" alt="pPassport Logo" />
         </div>
       </div>
 
-      <div className="mt-6 flex w-full flex-wrap px-10">
+      <div className="flex flex-wrap w-full px-10 mt-6">
         <div className="w-3/4">
           <p className="mb-4 text-2xl text-black">Decentralized Identity Verification</p>
           <p className="text-xl text-black">Select the verification stamps you’d like to connect to your Passport.</p>
@@ -132,7 +135,7 @@ export default function Dashboard() {
               <div>
                 <button
                   data-testid="button-passport-json"
-                  className="float-right rounded-md border-2 border-gray-300 py-2 px-6 text-black"
+                  className="float-right px-6 py-2 text-black border-2 border-gray-300 rounded-md"
                   onClick={onOpen}
                 >{`</> Passport JSON`}</button>
 

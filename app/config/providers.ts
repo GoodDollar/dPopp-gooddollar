@@ -51,4 +51,9 @@ export const STAMP_PROVIDERS: Readonly<Providers> = {
     name: "Github",
     description: "Github name",
   },
+  GoodDollar: {
+    icon: "./assets/G$StampIcon.svg",
+    name: "GoodDollar",
+    description: "GoodDollar wallet",
+  },
 };

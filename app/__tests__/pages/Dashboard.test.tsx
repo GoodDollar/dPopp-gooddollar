@@ -68,7 +68,7 @@ const mockUserContext: UserContextState = {
     },
     GoodDollar: {
       providerSpec: STAMP_PROVIDERS.GoodDollar,
-      stamp: undefined
+      stamp: undefined,
     },
   },
   handleAddStamp: handleAddStamp,

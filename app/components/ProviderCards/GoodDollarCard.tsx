@@ -23,12 +23,7 @@ import { useDisclosure, useToast } from "@chakra-ui/react";
 import { DoneToastContent } from "../DoneToastContent";
 
 // --- gooddollar client sdk
-import {
-  useLogin,
-  LoginButton,
-  createLoginLink,
-  parseLoginResponse,
-} from "client-sdk-gooddollar";
+import { useLogin, LoginButton, createLoginLink, parseLoginResponse } from "client-sdk-gooddollar";
 
 const providerId: PROVIDER_ID = "GoodDollar";
 
@@ -38,22 +33,21 @@ export default function GoodDollarCard(): JSX.Element {
   const [gooddollarData, setGooddollarData] = useState<any>({});
 
   const gooddollarLinkDev = createLoginLink({
-    redirectLink: "http://gooddev.netlify.app/AppNavigation/LoginRedirect",
+    redirectLink: "http://wallet.gooddollar.org/AppNavigation/LoginRedirect",
     v: "gitcoin-hackaton-test",
     web: "https://gooddollar.netlify.app",
     id: "0xDBF7272a7662f814a3Ab4cC901546161b8C86094",
     r: ["email"],
-    rdu: "http://localhost:3000",
+    rdu: "http://localhost:3000/#/dashboard",
   });
 
   const handleFetchGoodCredential = async (data: any): Promise<void> => {
     try {
       if (data.error) return alert("Login request denied !");
-      console.log('handleFetchGoodCrendential -- data -->', {data})
+      console.log("handleFetchGoodCrendential -- data -->", { data });
 
       // handle fetchVerifiableCredential
       // Handle add stamp
-
 
       // setGooddollarData(await parseLoginResponse(data));
       // console.log("cool stuff happening", parseLoginResponse(data));
@@ -69,16 +63,16 @@ export default function GoodDollarCard(): JSX.Element {
   // );
 
   const issueCredentialWidget = (
-      <LoginButton
-        data-testid="button-verify-gooddollar"
-        className="verify-btn"
-        onLoginCallback={handleFetchGoodCredential}
-        gooddollarlink={gooddollarLinkDev}
-        rdu="http://localhost:3000"
-      >
+    <LoginButton
+      data-testid="button-verify-gooddollar"
+      className="verify-btn"
+      onLoginCallback={handleFetchGoodCredential}
+      gooddollarlink={gooddollarLinkDev}
+      rdu="http://localhost:3000/#/dashboard"
+    >
       Connect wallet
     </LoginButton>
-  ) 
+  );
 
   return (
     <Card

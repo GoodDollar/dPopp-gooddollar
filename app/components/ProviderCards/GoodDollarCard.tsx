@@ -1,7 +1,5 @@
 // --- React Methods
 import React, { useContext, useState, useEffect } from "react";
-import { debounce } from "ts-debounce";
-import { BroadcastChannel } from "broadcast-channel";
 
 // --- Datadog
 import { datadogLogs } from "@datadog/browser-logs";
@@ -13,26 +11,26 @@ import { fetchVerifiableCredential } from "@gitcoin/passport-identity/dist/commo
 // pull context
 import { UserContext } from "../../context/userContext";
 
-import { PROVIDER_ID, Stamp } from "@gitcoin/passport-types";
+import { PROVIDER_ID } from "@gitcoin/passport-types";
 import { ProviderSpec } from "../../config/providers";
 
-const iamUrl = process.env.NEXT_PUBLIC_DPOPP_IAM_URL || "";
+// --- ethers utils for checksumming address
+import { utils } from "ethers";
 
 // --- import components
 import { Card } from "../Card";
-import { VerifyModal } from "../VerifyModal";
-import { useDisclosure, useToast } from "@chakra-ui/react";
+import { useToast } from "@chakra-ui/react";
 import { DoneToastContent } from "../DoneToastContent";
 
 // --- gooddollar client sdk
-import { useLogin, LoginButton, createLoginLink, parseLoginResponse } from "@gooddollar/goodlogin-sdk";
+import { LoginButton, createLoginLink, parseLoginResponse } from "@gooddollar/goodlogin-sdk";
 
 const providerId: PROVIDER_ID = "GoodDollar";
 
 export default function GoodDollarCard(): JSX.Element {
   const { address, signer, handleAddStamp, allProvidersState } = useContext(UserContext);
   const [isLoading, setLoading] = useState(false);
-  const [gooddollarData, setGooddollarData] = useState<any>({});
+  const toast = useToast();
 
   useEffect(() => {
     if (!isLoading) {
@@ -51,71 +49,53 @@ export default function GoodDollarCard(): JSX.Element {
     rdu: "http://localhost:3000/#/dashboard",
   });
 
-  // console.log('gooddollarLinkDev -->', {gooddollarLinkDev})
-
-  // function listenForRedirect(e: { target: string; data: { code: string; state: string } }) {
-  //   console.log('e listenforredirect gd -->', e);
-  // }
-
-  const mockData = {
-    a: { value: "0x3B7275C428c9B46D2c244E066C0bbadB9B9a8B9f" },
-    error: undefined,
-  };
-
   const handleFetchGoodCredential = async (data: any): Promise<void> => {
     try {
       if (data.error) return alert("Login request denied !");
-      // console.log("handleFetchGoodCrendential -- data -->", { data });
-      const parsed = await parseLoginResponse(data);
-      console.log("handleFetchGoodCrendential -- data -->", { data, parsed });
+      const parsed = (await parseLoginResponse(data)) as any;
+      const checksum = address && utils.getAddress(address);
 
       // handle fetchVerifiableCredential
-      // setLoading(true);
-      // fetchVerifiableCredential(
-      //   process.env.NEXT_PUBLIC_DPOPP_IAM_URL || "",
-      //   {
-      //     type: providerId,
-      //     version: "0.0.0",
-      //     address: mockData.a.value,
-      //     proofs: {
-      //       code: ''
-      //     },
-      //   },
-      //   signer as { signMessage: (message: string) => Promise<string> }
-      // ).then (async (verified: { credential: any}): Promise<void> => {
-      //     await handleAddStamp({
-      //       provider: providerId,
-      //       credential: verified.credential,
-      //     });
-      //     // datadogLogs.logger.info("Successfully saved Stamp", { provider: "GoodDollar" });
-      //   })
-      //   .catch((e) => {
-      //     // datadogLogs.logger.error("Verification Error", { error: e, provider: providerId });
-      //     throw e;
-      //   })
-      //   .finally(() => {
-      //     setLoading(false);
-      //   });
-      // Handle add stamp
-
-      // setGooddollarData(await parseLoginResponse(data));
-      // console.log("cool stuff happening", parseLoginResponse(data));
+      setLoading(true);
+      fetchVerifiableCredential(
+        process.env.NEXT_PUBLIC_DPOPP_IAM_URL || "",
+        {
+          type: providerId,
+          version: "0.0.0",
+          address: checksum || "",
+          proofs: {
+            valid: parsed.isAddressWhitelisted.value,
+            whitelistedAddress: parsed.walletAddrress.value, // note: not a typo
+          },
+        },
+        signer as { signMessage: (message: string) => Promise<string> }
+      )
+        .then(async (verified: { credential: any }): Promise<void> => {
+          await handleAddStamp({
+            provider: providerId,
+            credential: verified.credential,
+          });
+          // datadogLogs.logger.info("Successfully saved Stamp", { provider: "GoodDollar" });
+          // localStorage.removeItem('gooddollarLogin');
+          toast({
+            duration: 5000,
+            isClosable: true,
+            render: (result: any) => <DoneToastContent providerId={providerId} result={result} />,
+          });
+        })
+        .catch((e) => {
+          // datadogLogs.logger.error("Verification Error", { error: e, provider: providerId });
+          console.log("catch fetch error -->", { e });
+          // localStorage.removeItem('gooddollarLogin')
+          // TODO: handle error
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     } catch (e) {
       console.log(e);
     }
   };
-
-  // when using cbu
-  // useEffect(() => {
-  //   const channel = new BroadcastChannel("gooddollar_verify_channel")
-
-  //   console.log('channel gd -->', {channel})
-  //   channel.onmessage = debounce(listenForRedirect, 300);
-
-  //   return () => {
-  //     channel.close();
-  //   }
-  // })
 
   const issueCredentialWidget = (
     <LoginButton

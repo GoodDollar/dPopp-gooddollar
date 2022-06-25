@@ -70,13 +70,13 @@ export default function GoodDollarCard(): JSX.Element {
         },
         signer as { signMessage: (message: string) => Promise<string> }
       )
-        .then(async (verified: { credential: any }): Promise<void> => {
+        .then(async (verified): Promise<void> => {
           await handleAddStamp({
             provider: providerId,
             credential: verified.credential,
           });
-          // datadogLogs.logger.info("Successfully saved Stamp", { provider: "GoodDollar" });
-          // localStorage.removeItem('gooddollarLogin');
+          datadogLogs.logger.info("Successfully saved Stamp", { provider: "GoodDollar" });
+          localStorage.removeItem("gooddollarLogin");
           toast({
             duration: 5000,
             isClosable: true,
@@ -84,9 +84,9 @@ export default function GoodDollarCard(): JSX.Element {
           });
         })
         .catch((e) => {
-          // datadogLogs.logger.error("Verification Error", { error: e, provider: providerId });
+          datadogLogs.logger.error("Verification Error", { error: e, provider: providerId });
           console.log("catch fetch error -->", { e });
-          // localStorage.removeItem('gooddollarLogin')
+          localStorage.removeItem("gooddollarLogin");
           // TODO: handle error
         })
         .finally(() => {
@@ -112,7 +112,8 @@ export default function GoodDollarCard(): JSX.Element {
   return (
     <Card
       isLoading={isLoading}
-      providerSpec={allProvidersState[providerId]!.providerSpec as ProviderSpec}
+      providerSpec={allProvidersState[providerId]!.providerSpec}
+      verifiableCredential={allProvidersState[providerId]!.stamp?.credential}
       issueCredentialWidget={issueCredentialWidget}
     />
   );

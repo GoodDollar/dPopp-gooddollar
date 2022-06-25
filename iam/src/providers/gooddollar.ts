@@ -8,9 +8,10 @@ import { StaticJsonRpcProvider } from "@ethersproject/providers";
 
 // ------ GoodDollar identity ABI & Address
 import Identity from "@gooddollar/goodprotocol/artifacts/contracts/Interfaces.sol/IIdentity.json";
-const IDENTITY_ADDRESS = "0x76e76e10Ac308A1D54a00f9df27EdCE4801F288b";
+const IDENTITY_ADDRESS_FUSE = "0xFa8d865A962ca8456dF331D78806152d3aC5B84F";
 
-// Export a simple Provider as an example
+const fuse_rpc = process.env.RPC_FUSE_URL || "https://rpc.fuse.io"; //TODO: add env to build-process
+
 export class GoodDollarProvider implements Provider {
   // Give the provider a type so that we can select it with a payload
   type = "GoodDollar";
@@ -27,11 +28,10 @@ export class GoodDollarProvider implements Provider {
     const { address, proofs } = payload;
 
     try {
-      const provider: StaticJsonRpcProvider = new StaticJsonRpcProvider(process.env.RPC_URL);
-      const identifyInterface = new utils.Interface(Identity.abi);
-      const contract = new Contract(IDENTITY_ADDRESS, identifyInterface, provider);
+      const providerFuse: StaticJsonRpcProvider = new StaticJsonRpcProvider(fuse_rpc);
+      const identityInterface = new utils.Interface(Identity.abi);
+      const contract = new Contract(IDENTITY_ADDRESS_FUSE, identityInterface, providerFuse);
       const whitelistedAddress = proofs.whitelistedAddress;
-
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
       const valid: boolean = await contract.isWhitelisted(whitelistedAddress);
 

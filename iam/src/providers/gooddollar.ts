@@ -3,8 +3,15 @@ import type { Provider, ProviderOptions } from "../types";
 import type { RequestPayload, VerifiedPayload } from "@gitcoin/passport-types";
 
 // ------ SDK
-import { parseLoginResponse } from "client-sdk-gooddollar";
+import { parseLoginResponse } from "@gooddollar/goodlogin-sdk";
 
+// ------ Ethers Library
+import { Contract, ContractInterface } from "ethers";
+import { StaticJsonRpcProvider } from "@ethersproject/providers";
+
+// ------ GoodDollar identity ABI & Address
+import Identity from "@gooddollar/goodprotocol/artifacts/contracts/Interfaces.sol/IIdentity.json";
+const IDENTITY_ADDRESS = "0x76e76e10Ac308A1D54a00f9df27EdCE4801F288b";
 interface isValidGooddollar {
   isWhiteListed?: boolean;
 }
@@ -25,7 +32,27 @@ export class GoodDollarProvider implements Provider {
 
   // verify that the proof object contains valid === "true"
   async verify(payload: RequestPayload): Promise<VerifiedPayload> {
-    // const { address } = payload;
+    const { address } = payload;
+    try {
+      const provider: StaticJsonRpcProvider = new StaticJsonRpcProvider(process.env.RPC_URL);
+      const identity = Identity.abi as ContractInterface;
+      const contract = new Contract(IDENTITY_ADDRESS, Identity.abi as ContractInterface, provider);
+      // const valid: boolean = await contract.methods.isWhitelisted(address).call();
+
+      // return {
+      //   valid,
+      //   record: valid
+      //   ? {
+      //       address,
+      //     }
+      //   : undefined
+      // };
+    } catch (e) {
+      return {
+        valid: false,
+        error: [JSON.stringify(e)],
+      };
+    }
     // let valid = false;
     // verifiedPayload: isValidGooddollar = {};
     // try {

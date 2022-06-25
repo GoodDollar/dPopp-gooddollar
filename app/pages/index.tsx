@@ -3,6 +3,7 @@
 import React from "react";
 import { BroadcastChannel } from "broadcast-channel";
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
+import { useRouter } from "next/router";
 
 // -- Next Methods
 import type { NextPage } from "next";
@@ -20,7 +21,7 @@ datadogRum.init({
   applicationId: process.env.NEXT_PUBLIC_DATADOG_APPLICATION_ID || "",
   clientToken: process.env.NEXT_PUBLIC_DATADOG_CLIENT_TOKEN || "",
   site: "datadoghq.eu",
-  //service: "passport-frontend",
+  service: "passport-frontend",
   env: process.env.NEXT_PUBLIC_DATADOG_ENV || "",
   // Specify a version number to identify the deployed version of your application in Datadog
   version: "1.0.0",
@@ -35,13 +36,17 @@ datadogLogs.init({
   site: "datadoghq.eu",
   forwardErrorsToLogs: true,
   sampleRate: 100,
-  //service: `passport-frontend`,
+  service: "passport-frontend",
   env: process.env.NEXT_PUBLIC_DATADOG_ENV || "",
 });
 
 const App: NextPage = () => {
   // pull any search params
   const queryString = new URLSearchParams(window?.location?.search);
+  const router = useRouter();
+  if (router.asPath.includes("?login=")) {
+    localStorage.setItem("gooddollarLogin", router.asPath);
+  }
   // Twitter oauth will attach code & state in oauth procedure
   const queryError = queryString.get("error");
   const queryCode = queryString.get("code");

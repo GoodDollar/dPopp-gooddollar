@@ -51,7 +51,17 @@ export default function GoodDollarCard(): JSX.Element {
 
   const handleFetchGoodCredential = async (data: any): Promise<void> => {
     try {
-      if (data.error) return alert("Login request denied !");
+      if (data.error) {
+        localStorage.removeItem("gooddollarLogin");
+        toast({
+          id: "gd-login-denied",
+          duration: 2500,
+          isClosable: true,
+          status: "error",
+          title: "Request to login was denied!",
+        });
+        return;
+      }
       const parsed = (await parseLoginResponse(data)) as any;
       const checksum = address && utils.getAddress(address);
 
@@ -85,9 +95,14 @@ export default function GoodDollarCard(): JSX.Element {
         })
         .catch((e) => {
           datadogLogs.logger.error("Verification Error", { error: e, provider: providerId });
-          console.log("catch fetch error -->", { e });
           localStorage.removeItem("gooddollarLogin");
-          // TODO: handle error
+          toast({
+            id: "gd-failed-verification",
+            duration: 2500,
+            isClosable: true,
+            status: "error",
+            title: "Your GoodDollar verification failed. Try again!",
+          });
         })
         .finally(() => {
           setLoading(false);

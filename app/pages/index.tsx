@@ -44,9 +44,13 @@ const App: NextPage = () => {
   // pull any search params
   const queryString = new URLSearchParams(window?.location?.search);
   const router = useRouter();
+
+  // Gooddollar verified login is added to the path,
+  // so store this in localstorage for verifying in dashboard
   if (router.asPath.includes("?login=")) {
     localStorage.setItem("gooddollarLogin", router.asPath);
   }
+
   // Twitter oauth will attach code & state in oauth procedure
   const queryError = queryString.get("error");
   const queryCode = queryString.get("code");

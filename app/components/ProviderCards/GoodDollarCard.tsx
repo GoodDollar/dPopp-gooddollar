@@ -1,5 +1,6 @@
 // --- React Methods
 import React, { useContext, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 
 // --- Datadog
 import { datadogLogs } from "@datadog/browser-logs";
@@ -27,6 +28,7 @@ export default function GoodDollarCard(): JSX.Element {
   const { address, signer, handleAddStamp, allProvidersState } = useContext(UserContext);
   const [isLoading, setLoading] = useState(false);
   const toast = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     if (!isLoading) {
@@ -46,9 +48,18 @@ export default function GoodDollarCard(): JSX.Element {
     rdu: window.location.href,
   });
 
+  const clearLogin = () => {
+    const loginParam = searchParams.get("login");
+    if (loginParam) {
+      localStorage.removeItem("gooddollarLogin");
+      searchParams.delete("login");
+      setSearchParams(searchParams);
+    }
+  };
+
   const handleFetchGoodCredential = async (data: any): Promise<void> => {
     try {
-      localStorage.removeItem("gooddollarLogin");
+      clearLogin();
 
       if (data.error) {
         toast({
@@ -84,9 +95,7 @@ export default function GoodDollarCard(): JSX.Element {
             provider: providerId,
             credential: verified.credential,
           });
-          datadogLogs.logger.info("Successfully saved Stamp", {
-            provider: "GoodDollar",
-          });
+          datadogLogs.logger.info("Successfully saved Stamp", { provider: "GoodDollar" });
           toast({
             duration: 5000,
             isClosable: true,
@@ -94,10 +103,8 @@ export default function GoodDollarCard(): JSX.Element {
           });
         })
         .catch((e) => {
-          datadogLogs.logger.error("Verification Error", {
-            error: e,
-            provider: providerId,
-          });
+          datadogLogs.logger.error("Verification Error", { error: e, provider: providerId });
+          clearLogin();
           toast({
             id: "gd-failed-verification",
             duration: 2500,

@@ -47,8 +47,8 @@ const App: NextPage = () => {
 
   // Gooddollar verified login is added to the path,
   // so store this in localstorage for verifying in dashboard
-  if (router.asPath.includes("?login=")) {
-    localStorage.setItem("gooddollarLogin", router.asPath);
+  if (router.query.login) {
+    localStorage.setItem("gooddollarLogin", router.query.login as string);
   }
 
   // Twitter oauth will attach code & state in oauth procedure
@@ -62,7 +62,10 @@ const App: NextPage = () => {
     const channel = new BroadcastChannel("twitter_oauth_channel");
     // only continue with the process if a code is returned
     if (queryCode) {
-      channel.postMessage({ target: "twitter", data: { code: queryCode, state: queryState } });
+      channel.postMessage({
+        target: "twitter",
+        data: { code: queryCode, state: queryState },
+      });
     }
     // always close the redirected window
     window.close();
@@ -75,7 +78,10 @@ const App: NextPage = () => {
     const channel = new BroadcastChannel("github_oauth_channel");
     // only continue with the process if a code is returned
     if (queryCode) {
-      channel.postMessage({ target: "github", data: { code: queryCode, state: queryState } });
+      channel.postMessage({
+        target: "github",
+        data: { code: queryCode, state: queryState },
+      });
     }
     // always close the redirected window
     window.close();

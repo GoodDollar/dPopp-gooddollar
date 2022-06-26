@@ -1,9 +1,16 @@
+import Router from "next/router";
 import { render } from "@testing-library/react";
 import { STAMP_PROVIDERS } from "../../config/providers";
 import { UserContext, UserContextState } from "../../context/userContext";
 import Index from "../../pages/index";
 
 jest.mock("../../utils/onboard.ts");
+const useRouter = jest.spyOn(require("next/router"), "useRouter");
+
+useRouter.mockImplementationOnce(() => ({
+  query: {},
+  asPath: "",
+}));
 
 const mockHandleConnection = jest.fn();
 const mockCreatePassport = jest.fn();

@@ -12,10 +12,6 @@ import { fetchVerifiableCredential } from "@gitcoin/passport-identity/dist/commo
 import { UserContext } from "../../context/userContext";
 
 import { PROVIDER_ID } from "@gitcoin/passport-types";
-import { ProviderSpec } from "../../config/providers";
-
-// --- ethers utils for checksumming address
-import { utils } from "ethers";
 
 // --- import components
 import { Card } from "../Card";
@@ -40,19 +36,21 @@ export default function GoodDollarCard(): JSX.Element {
     }
   }, [isLoading]);
 
+  //TODO: verify all these details
   const gooddollarLinkDev = createLoginLink({
-    redirectLink: "http://wallet.gooddollar.org/AppNavigation/LoginRedirect",
+    redirectLink: "https://wallet.gooddollar.org/AppNavigation/LoginRedirect",
     v: "gitcoin-hackaton-test",
-    web: "https://gooddollar.netlify.app",
+    web: "https://passport.gitcoin.co",
     id: "0xDBF7272a7662f814a3Ab4cC901546161b8C86094",
     r: [],
-    rdu: "http://localhost:3000/#/dashboard",
+    rdu: window.location.href,
   });
 
   const handleFetchGoodCredential = async (data: any): Promise<void> => {
     try {
+      localStorage.removeItem("gooddollarLogin");
+
       if (data.error) {
-        localStorage.removeItem("gooddollarLogin");
         toast({
           id: "gd-login-denied",
           duration: 2500,
@@ -62,17 +60,18 @@ export default function GoodDollarCard(): JSX.Element {
         });
         return;
       }
-      const parsed = (await parseLoginResponse(data)) as any;
-      const checksum = address && utils.getAddress(address);
 
-      // handle fetchVerifiableCredential
+      const parsed = await parseLoginResponse(data);
+      //TODO: which address are we passing to credential?
+      let credentialAddress = address || parsed.walletAddress.value;
+
       setLoading(true);
       fetchVerifiableCredential(
         process.env.NEXT_PUBLIC_DPOPP_IAM_URL || "",
         {
           type: providerId,
           version: "0.0.0",
-          address: checksum || "",
+          address: credentialAddress || "",
           proofs: {
             valid: parsed.isAddressWhitelisted.value,
             whitelistedAddress: parsed.walletAddrress.value, // note: not a typo
@@ -85,8 +84,9 @@ export default function GoodDollarCard(): JSX.Element {
             provider: providerId,
             credential: verified.credential,
           });
-          datadogLogs.logger.info("Successfully saved Stamp", { provider: "GoodDollar" });
-          localStorage.removeItem("gooddollarLogin");
+          datadogLogs.logger.info("Successfully saved Stamp", {
+            provider: "GoodDollar",
+          });
           toast({
             duration: 5000,
             isClosable: true,
@@ -94,8 +94,10 @@ export default function GoodDollarCard(): JSX.Element {
           });
         })
         .catch((e) => {
-          datadogLogs.logger.error("Verification Error", { error: e, provider: providerId });
-          localStorage.removeItem("gooddollarLogin");
+          datadogLogs.logger.error("Verification Error", {
+            error: e,
+            provider: providerId,
+          });
           toast({
             id: "gd-failed-verification",
             duration: 2500,
@@ -118,7 +120,7 @@ export default function GoodDollarCard(): JSX.Element {
       className="verify-btn"
       onLoginCallback={handleFetchGoodCredential}
       gooddollarlink={gooddollarLinkDev}
-      rdu="http://localhost:3000/#/dashboard"
+      rdu={window.location.href}
     >
       Connect wallet
     </LoginButton>

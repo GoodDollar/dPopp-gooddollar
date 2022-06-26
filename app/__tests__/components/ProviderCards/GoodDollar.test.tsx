@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor, waitForElementToBeRemoved } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, waitForElementToBeRemoved, act } from "@testing-library/react";
 import { GoodDollarCard } from "../../../components/ProviderCards";
 
 import { UserContext, UserContextState } from "../../../context/userContext";
@@ -8,6 +8,7 @@ import { STAMP_PROVIDERS } from "../../../config/providers";
 import { gooddollarStampFixture } from "../../../__test-fixtures__/databaseStorageFixtures";
 import { SUCCESFULL_GOODDOLLAR_RESULT } from "../../../__test-fixtures__/verifiableCredentialResults";
 import { fetchVerifiableCredential } from "@gitcoin/passport-identity/dist/commonjs/src/credentials";
+import { buffer } from "node:stream/consumers";
 
 jest.mock("@gitcoin/passport-identity/dist/commonjs/src/credentials", () => ({
   fetchVerifiableCredential: jest.fn(),
@@ -39,6 +40,28 @@ const mockUserContext: UserContextState = {
   wallet: mockWallet,
   signer: undefined,
   walletLabel: mockWallet.label,
+};
+
+export const sampleGooddollarSignedObject = {
+  a: { value: "0x9E6Ea049A281F513a2BAbb106AF1E023FEEeCfA9", attestation: "" },
+  v: { value: true, attestation: "" },
+  I: { value: "India", attestation: "" },
+  n: { value: "Harjaap Dhillon", attestation: "" },
+  e: { value: "harvydhillon16@gmail.com", attestation: "" },
+  m: { value: "+918146851290", attestation: "" },
+  nonce: { value: Date.now(), attestation: "" },
+  sig: "0xadbf6657ff309f9f25dddf72d2d04ec3b0af053b2db9121910f79ea82bce486e1db26ea639670fa1600ce862e209845e1d2a73ad7a4a4e858a80dfa33f79e0ef1c",
+};
+
+export const sampleBadGooddollarSignedObject = {
+  a: { value: "", attestation: "" },
+  v: { value: true, attestation: "" },
+  I: { value: "India", attestation: "" },
+  n: { value: "Harjaap Dhillon", attestation: "" },
+  e: { value: "harvydhillon16@gmail.com", attestation: "" },
+  m: { value: "+918146851290", attestation: "" },
+  nonce: { value: Date.now(), attestation: "" },
+  sig: "0xadbf6657ff309f9f25dddf72d2d04ec3b0af053b2db9121910f79ea82bce486e1db26ea639670fa1600ce862e209845e1d2a73ad7a4a4e858a80dfa33f79e0ef1c",
 };
 
 describe("when user has not verfied with GoodDollarProvider", () => {
@@ -79,91 +102,102 @@ describe("when user has verified with GoodDollarProvider", () => {
   });
 });
 
-// describe("when the verify button is clicked", () => {
-//   afterEach(() => {
-//     jest.clearAllMocks();
-//   });
+describe("when the verify button is clicked", () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
-//   describe("and when a successful GoodDollar result is returned", () => {
-//     beforeEach(() => {
-//       (fetchVerifiableCredential as jest.Mock).mockResolvedValue(SUCCESFULL_GOODDOLLAR_RESULT);
-//     });
+  it("it should redirect to gooddollar login screen ", async () => {
+    render(
+      <UserContext.Provider value={mockUserContext}>
+        <GoodDollarCard />
+      </UserContext.Provider>
+    );
 
-//     it("after returned from succesfull login, the localStorage item is set ", async () => {
-//       render(
-//         <UserContext.Provider value={mockUserContext}>
-//           <GoodDollarCard />
-//         </UserContext.Provider>
-//       );
+    const initialVerifyButton = screen.queryByTestId("button-verify-gooddollar");
 
-//       const initialVerifyButton = screen.queryByTestId("button-verify-gooddollar");
+    fireEvent.click(initialVerifyButton!);
 
-//       fireEvent.click(initialVerifyButton!);
+    expect(window.location.toString().includes("https://wallet.gooddollar.org")).toBeTruthy();
+  });
 
-//       // const setItem = jest.spyOn(Object.getPrototypeOf(localStorage), 'setItem');
+  describe("and when a successful GoodDollar result is returned", () => {
+    beforeEach(() => {
+      (fetchVerifiableCredential as jest.Mock).mockResolvedValue(SUCCESFULL_GOODDOLLAR_RESULT);
+    });
 
-//       // expect(setItem).toHaveBeenCalled();
-//     });
+    it("after returned from succesfull login, success toast is displayed ", async () => {
+      window.location.assign(
+        "http://localhost/?login=" + Buffer.from(JSON.stringify(sampleGooddollarSignedObject)).toString("base64")
+      );
+      const setItem = jest.spyOn(Object.getPrototypeOf(localStorage), "setItem");
 
-// it("clicking verify adds the stamp", async () => {
-//   render(
-//     <UserContext.Provider value={mockUserContext}>
-//       <GoodDollarCard />
-//     </UserContext.Provider>
-//   );
+      await act(
+        async () =>
+          render(
+            <UserContext.Provider value={mockUserContext}>
+              <GoodDollarCard />
+            </UserContext.Provider>
+          ) as any
+      );
 
-//   const initialVerifyButton = screen.queryByTestId("button-verify-gooddollar");
+      await waitFor(() => {
+        const doneToast = screen.getByTestId("toast-done-gooddollar");
+        expect(doneToast).toBeInTheDocument();
+      });
+    });
+  });
 
-//   // Click verify button on gooddollar card
-//   fireEvent.click(initialVerifyButton!);
+  // it("clicking verify adds the stamp", async () => {
+  //   render(
+  //     <UserContext.Provider value={mockUserContext}>
+  //       <GoodDollarCard />
+  //     </UserContext.Provider>
+  //   );
 
-//   await waitFor(() => {
-//     expect(handleAddStamp).toBeCalled();
-//   });
+  //   const initialVerifyButton = screen.queryByTestId("button-verify-gooddollar");
 
-//   // Wait to see the done toast
-//   await waitFor(() => {
-//     const doneToast = screen.getByTestId("toast-done-gooddollar");
-//     expect(doneToast).toBeInTheDocument();
-//   });
-// });
-//   });
-// });
+  //   // Click verify button on gooddollar card
+  //   fireEvent.click(initialVerifyButton!);
 
-//   describe("and when verifying returns an error", () => {
-//     it("removes the localStorage item", async () => {
-//       (fetchVerifiableCredential as jest.Mock).mockRejectedValue("ERROR");
-//       render(
-//         <UserContext.Provider value={mockUserContext}>
-//           <GoodDollarCard />
-//         </UserContext.Provider>
-//       );
+  //   await waitFor(() => {
+  //     expect(handleAddStamp).toBeCalled();
+  //   });
 
-//       const initialVerifyButton = screen.queryByTestId("button-verify-gooddollar");
+  //   // Wait to see the done toast
+  //   await waitFor(() => {
+  //     const doneToast = screen.getByTestId("toast-done-gooddollar");
+  //     expect(doneToast).toBeInTheDocument();
+  //   });
+  // });
+  //   });
+  // });
 
-//       fireEvent.click(initialVerifyButton!);
+  describe("and when verifying returns an error", () => {
+    it("after invalid login result, failure toast is displayed ", async () => {
+      (fetchVerifiableCredential as jest.Mock).mockRejectedValue("ERROR");
 
-//       const removeItem = jest.spyOn(Object.getPrototypeOf(localStorage), 'removeItem');
+      window.location.assign(
+        "http://localhost/?login=" + Buffer.from(JSON.stringify(sampleBadGooddollarSignedObject)).toString("base64")
+      );
+      const setItem = jest.spyOn(Object.getPrototypeOf(localStorage), "setItem");
 
-//       expect(removeItem).toHaveBeenCalled();
-//     });
+      await act(
+        async () =>
+          render(
+            <UserContext.Provider value={mockUserContext}>
+              <GoodDollarCard />
+            </UserContext.Provider>
+          ) as any
+      );
 
-//     it("Shows a toast that the verification failed", async () => {
-//       (fetchVerifiableCredential as jest.Mock).mockRejectedValue("ERROR");
-//       render(
-//         <UserContext.Provider value={mockUserContext}>
-//           <GoodDollarCard />
-//         </UserContext.Provider>
-//       );
-
-//       const initialVerifyButton = screen.queryByTestId("button-verify-gooddollar");
-
-//       fireEvent.click(initialVerifyButton!);
-
-//       await waitFor(() => {
-//         const doneToast = screen.getByTestId("toast-gd-failed-verification-title");
-//         expect(doneToast).toBeInTheDocument();
-//       });
-//     })
-// });
-// });
+      await waitFor(
+        () => {
+          const doneToast = screen.getByText("Your GoodDollar verification failed. Try again!");
+          expect(doneToast).toBeInTheDocument();
+        },
+        { timeout: 2000 }
+      );
+    });
+  });
+});

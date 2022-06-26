@@ -1,5 +1,6 @@
 // --- React Methods
 import React, { useContext, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 
 // --- Datadog
 import { datadogLogs } from "@datadog/browser-logs";
@@ -31,6 +32,7 @@ export default function GoodDollarCard(): JSX.Element {
   const { address, signer, handleAddStamp, allProvidersState } = useContext(UserContext);
   const [isLoading, setLoading] = useState(false);
   const toast = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     if (!isLoading) {
@@ -49,10 +51,19 @@ export default function GoodDollarCard(): JSX.Element {
     rdu: "http://localhost:3000/#/dashboard",
   });
 
+  const clearLogin = () => {
+    const loginParam = searchParams.get("login");
+    if (loginParam) {
+      localStorage.removeItem("gooddollarLogin");
+      searchParams.delete("login");
+      setSearchParams(searchParams);
+    }
+  };
+
   const handleFetchGoodCredential = async (data: any): Promise<void> => {
     try {
       if (data.error) {
-        localStorage.removeItem("gooddollarLogin");
+        clearLogin();
         toast({
           id: "gd-login-denied",
           duration: 2500,
@@ -86,7 +97,7 @@ export default function GoodDollarCard(): JSX.Element {
             credential: verified.credential,
           });
           datadogLogs.logger.info("Successfully saved Stamp", { provider: "GoodDollar" });
-          localStorage.removeItem("gooddollarLogin");
+          clearLogin();
           toast({
             duration: 5000,
             isClosable: true,
@@ -95,7 +106,7 @@ export default function GoodDollarCard(): JSX.Element {
         })
         .catch((e) => {
           datadogLogs.logger.error("Verification Error", { error: e, provider: providerId });
-          localStorage.removeItem("gooddollarLogin");
+          clearLogin();
           toast({
             id: "gd-failed-verification",
             duration: 2500,

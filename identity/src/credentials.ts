@@ -102,8 +102,7 @@ export const issueChallengeCredential = async (
       provider: `challenge-${record.type}`,
       // extra fields to convey challenge data
       challenge: record.challenge,
-      address: record.address,
-      whitelistedAddress: record.proofs.whitelistedAddress,
+      address: record.proofs?.whitelistedAddress || record.address,
     },
   });
 

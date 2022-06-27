@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 // --- React Methods
 import React, { useContext, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 // --Components
 import { CardList } from "../components/CardList";
@@ -25,9 +25,12 @@ import { UserContext } from "../context/userContext";
 
 import { useViewerConnection } from "@self.id/framework";
 import { EthereumAuthProvider } from "@self.id/web";
+import { useRouter } from "next/router";
 
 export default function Dashboard() {
   const { passport, wallet, isLoadingPassport, handleConnection } = useContext(UserContext);
+  const router = useRouter();
+  const [searchParams] = useSearchParams();
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -40,10 +43,14 @@ export default function Dashboard() {
 
   // Route user to home when wallet is disconnected
   useEffect(() => {
-    if (!wallet) {
+    if (router.isReady === false) return;
+    const gooddollarLogin = searchParams.get("login");
+    // Gooddollar verified login is added to the path, so stay here we
+    if (gooddollarLogin) return;
+    else if (!wallet) {
       navigate("/");
     }
-  }, [wallet]);
+  }, [wallet, router]);
 
   // Allow user to retry Ceramic connection if failed
   const retryConnection = () => {

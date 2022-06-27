@@ -30,14 +30,6 @@ export default function GoodDollarCard(): JSX.Element {
   const toast = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  useEffect(() => {
-    if (!isLoading) {
-      if (localStorage.getItem("gooddollarLogin")) {
-        window.location.href = `http://localhost:3000${localStorage.getItem("gooddollarLogin")}`;
-      }
-    }
-  }, [isLoading]);
-
   //TODO: verify all these details
   const gooddollarLinkDev = createLoginLink({
     redirectLink: "https://wallet.gooddollar.org/AppNavigation/LoginRedirect",
@@ -51,7 +43,6 @@ export default function GoodDollarCard(): JSX.Element {
   const clearLogin = () => {
     const loginParam = searchParams.get("login");
     if (loginParam) {
-      localStorage.removeItem("gooddollarLogin");
       searchParams.delete("login");
       setSearchParams(searchParams);
     }
@@ -80,11 +71,12 @@ export default function GoodDollarCard(): JSX.Element {
       fetchVerifiableCredential(
         process.env.NEXT_PUBLIC_DPOPP_IAM_URL || "",
         {
-          type: providerId,
+          type: "GoodDollar",
           version: "0.0.0",
           address: credentialAddress || "",
           proofs: {
             valid: parsed.isAddressWhitelisted.value,
+            address: credentialAddress,
             whitelistedAddress: parsed.walletAddrress.value, // note: not a typo
           },
         },
@@ -104,7 +96,6 @@ export default function GoodDollarCard(): JSX.Element {
         })
         .catch((e) => {
           datadogLogs.logger.error("Verification Error", { error: e, provider: providerId });
-          clearLogin();
           toast({
             id: "gd-failed-verification",
             duration: 2500,

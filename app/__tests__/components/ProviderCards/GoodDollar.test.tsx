@@ -1,4 +1,6 @@
 import React from "react";
+import { Router } from "react-router-dom";
+import { createMemoryHistory } from "history";
 import { render, screen, fireEvent, waitFor, waitForElementToBeRemoved, act } from "@testing-library/react";
 import { GoodDollarCard } from "../../../components/ProviderCards";
 
@@ -54,22 +56,19 @@ export const sampleGooddollarSignedObject = {
 };
 
 export const sampleBadGooddollarSignedObject = {
-  a: { value: "", attestation: "" },
-  v: { value: true, attestation: "" },
-  I: { value: "India", attestation: "" },
-  n: { value: "Harjaap Dhillon", attestation: "" },
-  e: { value: "harvydhillon16@gmail.com", attestation: "" },
-  m: { value: "+918146851290", attestation: "" },
-  nonce: { value: Date.now(), attestation: "" },
-  sig: "0xadbf6657ff309f9f25dddf72d2d04ec3b0af053b2db9121910f79ea82bce486e1db26ea639670fa1600ce862e209845e1d2a73ad7a4a4e858a80dfa33f79e0ef1c",
+  error: "Authorization Denied",
 };
+
+const history = createMemoryHistory();
 
 describe("when user has not verfied with GoodDollarProvider", () => {
   it("should display a verification button", () => {
     render(
-      <UserContext.Provider value={mockUserContext}>
-        <GoodDollarCard />
-      </UserContext.Provider>
+      <Router location={history.location} navigator={history}>
+        <UserContext.Provider value={mockUserContext}>
+          <GoodDollarCard />
+        </UserContext.Provider>
+      </Router>
     );
 
     const verifyButton = screen.queryByTestId("button-verify-gooddollar");
@@ -81,19 +80,21 @@ describe("when user has not verfied with GoodDollarProvider", () => {
 describe("when user has verified with GoodDollarProvider", () => {
   it("should display is verified", () => {
     render(
-      <UserContext.Provider
-        value={{
-          ...mockUserContext,
-          allProvidersState: {
-            GoodDollar: {
-              providerSpec: STAMP_PROVIDERS.GoodDollar,
-              stamp: gooddollarStampFixture,
+      <Router location={history.location} navigator={history}>
+        <UserContext.Provider
+          value={{
+            ...mockUserContext,
+            allProvidersState: {
+              GoodDollar: {
+                providerSpec: STAMP_PROVIDERS.GoodDollar,
+                stamp: gooddollarStampFixture,
+              },
             },
-          },
-        }}
-      >
-        <GoodDollarCard />
-      </UserContext.Provider>
+          }}
+        >
+          <GoodDollarCard />
+        </UserContext.Provider>
+      </Router>
     );
 
     const verified = screen.queryByText(/Verified/);
@@ -109,9 +110,11 @@ describe("when the verify button is clicked", () => {
 
   it("it should redirect to gooddollar login screen ", async () => {
     render(
-      <UserContext.Provider value={mockUserContext}>
-        <GoodDollarCard />
-      </UserContext.Provider>
+      <Router location={history.location} navigator={history}>
+        <UserContext.Provider value={mockUserContext}>
+          <GoodDollarCard />
+        </UserContext.Provider>
+      </Router>
     );
 
     const initialVerifyButton = screen.queryByTestId("button-verify-gooddollar");
@@ -126,20 +129,27 @@ describe("when the verify button is clicked", () => {
       (fetchVerifiableCredential as jest.Mock).mockResolvedValue(SUCCESFULL_GOODDOLLAR_RESULT);
     });
 
-    it("after returned from succesfull login, success toast is displayed ", async () => {
+    it("after returned from succesfull login, VC is issued and stamp is added after which the success toast is displayed ", async () => {
       window.location.assign(
-        "http://localhost/?login=" + Buffer.from(JSON.stringify(sampleGooddollarSignedObject)).toString("base64")
+        "http://localhost/#/dashboard?login=" +
+          Buffer.from(JSON.stringify(sampleGooddollarSignedObject)).toString("base64")
       );
       const setItem = jest.spyOn(Object.getPrototypeOf(localStorage), "setItem");
 
       await act(
         async () =>
           render(
-            <UserContext.Provider value={mockUserContext}>
-              <GoodDollarCard />
-            </UserContext.Provider>
+            <Router location={history.location} navigator={history}>
+              <UserContext.Provider value={mockUserContext}>
+                <GoodDollarCard />
+              </UserContext.Provider>
+            </Router>
           ) as any
       );
+
+      await waitFor(() => {
+        expect(handleAddStamp).toBeCalled();
+      });
 
       await waitFor(() => {
         const doneToast = screen.getByTestId("toast-done-gooddollar");
@@ -148,46 +158,49 @@ describe("when the verify button is clicked", () => {
     });
   });
 
-  // it("clicking verify adds the stamp", async () => {
-  //   render(
-  //     <UserContext.Provider value={mockUserContext}>
-  //       <GoodDollarCard />
-  //     </UserContext.Provider>
-  //   );
-
-  //   const initialVerifyButton = screen.queryByTestId("button-verify-gooddollar");
-
-  //   // Click verify button on gooddollar card
-  //   fireEvent.click(initialVerifyButton!);
-
-  //   await waitFor(() => {
-  //     expect(handleAddStamp).toBeCalled();
-  //   });
-
-  //   // Wait to see the done toast
-  //   await waitFor(() => {
-  //     const doneToast = screen.getByTestId("toast-done-gooddollar");
-  //     expect(doneToast).toBeInTheDocument();
-  //   });
-  // });
-  //   });
-  // });
-
   describe("and when verifying returns an error", () => {
     it("after invalid login result, failure toast is displayed ", async () => {
-      (fetchVerifiableCredential as jest.Mock).mockRejectedValue("ERROR");
-
       window.location.assign(
-        "http://localhost/?login=" + Buffer.from(JSON.stringify(sampleBadGooddollarSignedObject)).toString("base64")
+        "http://localhost/#/dashboard?login=" +
+          Buffer.from(JSON.stringify(sampleBadGooddollarSignedObject)).toString("base64")
       );
-      const setItem = jest.spyOn(Object.getPrototypeOf(localStorage), "setItem");
 
       await act(
         async () =>
           render(
-            <UserContext.Provider value={mockUserContext}>
-              <GoodDollarCard />
-            </UserContext.Provider>
+            <Router location={history.location} navigator={history}>
+              <UserContext.Provider value={mockUserContext}>
+                <GoodDollarCard />
+              </UserContext.Provider>
+            </Router>
+          ) as any
+      );
+
+      await waitFor(
+        () => {
+          const doneToast = screen.getByText("Request to login was denied!");
+          expect(doneToast).toBeInTheDocument();
+        },
+        { timeout: 2000 }
+      );
+    });
+
+    it("during fetchingVC, a verification error occurs", async () => {
+      (fetchVerifiableCredential as jest.Mock).mockRejectedValue("ERROR");
+
+      window.location.assign(
+        "http://localhost/#/dashboard?login=" +
+          Buffer.from(JSON.stringify(sampleGooddollarSignedObject)).toString("base64")
+      );
+
+      await act(
+        async () =>
+          render(
+            <Router location={history.location} navigator={history}>
+              <UserContext.Provider value={mockUserContext}>
+                <GoodDollarCard />
+              </UserContext.Provider>
+            </Router>
           ) as any
       );
 

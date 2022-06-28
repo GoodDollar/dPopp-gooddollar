@@ -53,7 +53,7 @@ export const STAMP_PROVIDERS: Readonly<Providers> = {
   },
   GoodDollar: {
     icon: "./assets/G$StampIcon.svg",
-    name: "GoodDollar",
-    description: "GoodDollar wallet",
+    name: "GoodDollar Unique Identity",
+    description: "Anonymized facial liveness and uniqueness test",
   },
 };

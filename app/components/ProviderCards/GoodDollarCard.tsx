@@ -63,20 +63,16 @@ export default function GoodDollarCard(): JSX.Element {
         return;
       }
 
-      const parsed = await parseLoginResponse(data);
-      //TODO: which address are we passing to credential?
-      let credentialAddress = address || parsed.walletAddress.value;
-
+      const parsed = (await parseLoginResponse(data)) as any;
       setLoading(true);
       fetchVerifiableCredential(
         process.env.NEXT_PUBLIC_DPOPP_IAM_URL || "",
         {
           type: "GoodDollar",
           version: "0.0.0",
-          address: credentialAddress || "",
+          address: address || "",
           proofs: {
             valid: parsed.isAddressWhitelisted.value,
-            address: credentialAddress,
             whitelistedAddress: parsed.walletAddrress.value, // note: not a typo
           },
         },

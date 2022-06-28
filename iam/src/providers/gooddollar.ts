@@ -29,8 +29,7 @@ export class GoodDollarProvider implements Provider {
 
     try {
       const providerFuse: StaticJsonRpcProvider = new StaticJsonRpcProvider(fuse_rpc);
-      const identityInterface = new utils.Interface(Identity.abi);
-      const contract = new Contract(IDENTITY_ADDRESS_FUSE, identityInterface, providerFuse);
+      const contract = new Contract(IDENTITY_ADDRESS_FUSE, Identity.abi, providerFuse);
       const whitelistedAddress = proofs.whitelistedAddress;
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
       const valid: boolean = await contract.isWhitelisted(whitelistedAddress);

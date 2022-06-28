@@ -31,19 +31,17 @@ export default function Dashboard() {
   const { passport, wallet, isLoadingPassport, handleConnection } = useContext(UserContext);
   const router = useRouter();
   const [searchParams] = useSearchParams();
-
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const navigate = useNavigate();
 
   const [viewerConnection, ceramicConnect] = useViewerConnection();
 
-  // console.log('Dashboard --> viewerConnection/ceramicConnect --', {viewerConnection, ceramicConnect})
   const { isOpen: retryModalIsOpen, onOpen: onRetryModalOpen, onClose: onRetryModalClose } = useDisclosure();
 
   // Route user to home when wallet is disconnected
   useEffect(() => {
-    if (router.isReady === false) return;
+    if (router?.isReady === false) return;
     const gooddollarLogin = searchParams.get("login");
     // Gooddollar verified login is added to the path, so stay here we
     if (gooddollarLogin) return;

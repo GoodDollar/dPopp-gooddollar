@@ -122,7 +122,6 @@ app.post("/api/v0.0.0/challenge", (req: Request, res: Response): void => {
         // extend/overwrite with record returned from the provider
         ...(challenge?.record || {}),
       };
-      // console.log("iam/challenge -- challenge record set -->", { record });
 
       // generate a VC for the given payload
       return void issueChallengeCredential(DIDKit, key, record)
@@ -132,7 +131,6 @@ app.post("/api/v0.0.0/challenge", (req: Request, res: Response): void => {
         })
         .catch((error) => {
           if (error) {
-            // console.log("error challenge -->", { error }); //eslint-disable-line @typescript-eslint/no-unsafe-assignment
             // return error msg indicating a failure producing VC
             return errorRes(res, "Unable to produce a verifiable credential");
           }

@@ -1,67 +1,79 @@
 // ---- Test subject
-import { RequestPayload } from "@gitcoin/passport-types";
 import { GoodDollarProvider } from "../src/providers/gooddollar";
 
-const mockIsRegistered = jest.fn();
+const MOCK_ADDRESS = "0x738488886dd94725864ae38252a90be1ab7609c7";
+const MOCK_ADDRESS2 = "0x738488886dd94725864ae38252a90be1ab7609c2";
+
+const mockIsWhitelisted = jest.fn();
+
+const MOCK_REQUEST_PAYLOAD = {
+  type: "GoodDollar",
+  address: MOCK_ADDRESS,
+  version: "0.0.0",
+  proofs: {
+    whitelistedAddress: MOCK_ADDRESS2
+  },
+  challenge: ""
+}
+
+const MOCK_INVALID_REQUEST_PAYLOAD = {
+  type: "GoodDollar",
+  address: "0xUNREGISTERED",
+  version: "0.0.0",
+  proofs: {
+    whitelistedAddress: "0xUNREGISTERED"
+  },
+  challenge: ""
+}
 
 jest.mock("ethers", () => {
   return {
     Contract: jest.fn().mockImplementation(() => {
       return {
-        isRegistered: mockIsRegistered,
+        isWhitelisted: mockIsWhitelisted,
       };
     }),
   };
 });
 
-const MOCK_ADDRESS = "0x738488886dd94725864ae38252a90be1ab7609c7";
-
 describe("Attempt verification", function () {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   it("should return true for an address whitelisted with gooddollar", async () => {
-    mockIsRegistered.mockResolvedValueOnce(true);
+    mockIsWhitelisted.mockResolvedValueOnce(true);
     const gd = new GoodDollarProvider();
-    const verifiedPayload = await gd.verify({
-      address: MOCK_ADDRESS,
-    } as RequestPayload);
+    const verifiedPayload = await gd.verify(MOCK_REQUEST_PAYLOAD);
 
-    expect(mockIsRegistered).toBeCalledWith(MOCK_ADDRESS);
+    expect(mockIsWhitelisted).toBeCalledWith(MOCK_ADDRESS2);
+
     expect(verifiedPayload).toEqual({
       valid: true,
       record: {
         address: MOCK_ADDRESS,
+        whitelistedAddress: MOCK_ADDRESS2,
       },
     });
   });
 
   it("should return false for an address that is not whitelisted with gooddollar", async () => {
-    mockIsRegistered.mockResolvedValueOnce(false);
+    mockIsWhitelisted.mockResolvedValueOnce(false);
     const UNREGISTERED_ADDRESS = "0xUNREGISTERED";
 
     const gd = new GoodDollarProvider();
-    const verifiedPayload = await gd.verify({
-      address: UNREGISTERED_ADDRESS,
-    } as RequestPayload);
+    const verifiedPayload = await gd.verify(MOCK_INVALID_REQUEST_PAYLOAD);
 
-    expect(mockIsRegistered).toBeCalledWith(UNREGISTERED_ADDRESS);
+    expect(mockIsWhitelisted).toBeCalledWith(UNREGISTERED_ADDRESS);
     expect(verifiedPayload).toEqual({
       valid: false,
     });
   });
 
   it("should return error response when isWhitelisted call errors", async () => {
-    mockIsRegistered.mockRejectedValueOnce("some error");
+    mockIsWhitelisted.mockRejectedValueOnce("some error");
     const UNREGISTERED_ADDRESS = "0xUNREGISTERED";
 
     const gd = new GoodDollarProvider();
-    const verifiedPayload = await gd.verify({
-      address: UNREGISTERED_ADDRESS,
-    } as RequestPayload);
+    const verifiedPayload = await gd.verify(MOCK_INVALID_REQUEST_PAYLOAD);
 
-    expect(mockIsRegistered).toBeCalledWith(UNREGISTERED_ADDRESS);
+    expect(mockIsWhitelisted).toBeCalledWith(UNREGISTERED_ADDRESS);
     expect(verifiedPayload).toEqual({
       valid: false,
       error: [JSON.stringify("some error")],

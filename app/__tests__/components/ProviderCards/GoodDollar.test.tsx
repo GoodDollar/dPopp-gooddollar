@@ -125,7 +125,7 @@ describe("when the verify button is clicked", () => {
 
     fireEvent.click(verifyButton!);
 
-    expect(window.location.toString().includes("https://wallet.gooddollar.org")).toBeTruthy();
+    expect(window.location.toString().includes("LoginRedirect")).toBeTruthy();
   });
 
   describe("and when a successful GoodDollar result is returned", () => {

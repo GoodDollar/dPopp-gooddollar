@@ -61,11 +61,10 @@ export default function GoodDollarCard(): JSX.Element {
   }, [searchParams, setSearchParams]);
 
   const handleModalOnClose = useCallback((): void => {
+    onClose(); //this needs to be first to prevent loop in jest tests
     setCredentialResponseIsLoading(false);
     setVerificationInProgress(false);
     setGetVerified(false);
-
-    onClose();
   }, [setVerificationInProgress, onClose]);
 
   const handleFetchGoodCredential = useCallback(
@@ -242,9 +241,9 @@ export default function GoodDollarCard(): JSX.Element {
       <Alert
         hidden={!credentialResponseIsLoading}
         status="warning"
-        data-testid="selfId-connection-alert"
+        data-testid="signature-waiting-alert"
         position={"fixed"}
-        top={"0"}
+        top={"30%"}
       >
         <Spinner thickness="4px" speed="0.65s" emptyColor="gray.200" color="orange.500" size="md" />
         <AlertTitle ml={4}> Waiting for wallet signature</AlertTitle>

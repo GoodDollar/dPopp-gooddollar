@@ -8,6 +8,7 @@ import { fetchVerifiableCredential } from "@gitcoin/passport-identity/dist/commo
 
 // --- GoodDollar
 import { useIsAddressVerified } from "@gooddollar/web3sdk-v2";
+import { LoginButton, createLoginLink, parseLoginResponse } from "@gooddollar/goodlogin-sdk";
 
 // pull context
 import { UserContext } from "../../context/userContext";
@@ -19,8 +20,6 @@ import { Card } from "../Card";
 import { Box, Button, ButtonGroup, useDisclosure, useToast, Alert, Spinner, AlertTitle } from "@chakra-ui/react";
 import { DoneToastContent } from "../DoneToastContent";
 
-// --- gooddollar client sdk
-import { LoginButton, createLoginLink, parseLoginResponse } from "@gooddollar/goodlogin-sdk";
 import { Envs } from "@gooddollar/web3sdk-v2";
 import { GoodDollarVerifyModal } from "./GoodDollarVerifyModal";
 import { VerifyModal } from "../VerifyModal";
@@ -68,7 +67,7 @@ export default function GoodDollarCard(): JSX.Element {
   }, [setVerificationInProgress, onClose]);
 
   const handleFetchGoodCredential = useCallback(
-    async (walletAddress: string): Promise<void> => {
+    async (walletAddress: string, signedResponse?: any): Promise<void> => {
       try {
         //TODO: which address are we passing to credential?
 
@@ -84,6 +83,7 @@ export default function GoodDollarCard(): JSX.Element {
             proofs: {
               valid: "true",
               whitelistedAddress: walletAddress,
+              signedResponse,
             },
           },
           signer as { signMessage: (message: string) => Promise<string> }
@@ -133,21 +133,21 @@ export default function GoodDollarCard(): JSX.Element {
 
   //once user is back from login with gooddolalr or face verification we can use this helper to trigger the stamp verificaiton
   const onGoodDollarRedirect = useCallback(
-    async (verifiedAddress: string) => {
+    async (verifiedAddress: string, signedResponse?: any) => {
       setVerificationInProgress(true);
       SetCredentialResponse(undefined);
       onOpen();
-      await handleFetchGoodCredential(verifiedAddress);
+      await handleFetchGoodCredential(verifiedAddress, signedResponse);
     },
     [SetCredentialResponse, setVerificationInProgress, handleFetchGoodCredential, onOpen]
   );
 
   //handle LoginButton result form redirect back
   const goodDollarLoginCallback = useCallback(
-    async (data: any) => {
+    async (signedResponse: any) => {
       clearLogin();
       // console.log({ data });
-      if (data.error) {
+      if (signedResponse.error) {
         toast({
           id: "gd-login-denied",
           duration: 2500,
@@ -158,8 +158,8 @@ export default function GoodDollarCard(): JSX.Element {
         return;
       }
 
-      const parsed = await parseLoginResponse(data);
-      onGoodDollarRedirect(parsed.walletAddrress.value);
+      const parsed = await parseLoginResponse(signedResponse);
+      onGoodDollarRedirect(parsed.walletAddrress.value, signedResponse);
     },
     [onGoodDollarRedirect, clearLogin, toast]
   );

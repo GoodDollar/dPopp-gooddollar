@@ -3,7 +3,6 @@
 import React from "react";
 import { BroadcastChannel } from "broadcast-channel";
 import { HashRouter as Router, Routes, Route } from "react-router-dom";
-import { useRouter } from "next/router";
 
 // -- Next Methods
 import type { NextPage } from "next";

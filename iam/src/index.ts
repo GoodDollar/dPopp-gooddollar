@@ -108,8 +108,10 @@ app.post("/api/v0.0.0/challenge", (req: Request, res: Response): void => {
     // ensure address is check-summed
     payload.address = utils.getAddress(payload.address);
     // generate a challenge for the given payload
+    // console.log({ payload });
     const challenge = providers.getChallenge(payload);
     // if the request is valid then proceed to generate a challenge credential
+    // console.log({ challenge });
     if (challenge && challenge.valid === true) {
       // construct a request payload to issue a credential against
       const record: RequestPayload = {
@@ -124,12 +126,17 @@ app.post("/api/v0.0.0/challenge", (req: Request, res: Response): void => {
       };
 
       // generate a VC for the given payload
+      // console.log("issue", { key, record });
       return void issueChallengeCredential(DIDKit, key, record)
         .then((credential) => {
+          // console.log({ credential });
+
           // return the verifiable credential
           return res.json(credential as CredentialResponseBody);
         })
         .catch((error) => {
+          // console.log({ error });
+
           if (error) {
             // return error msg indicating a failure producing VC
             return errorRes(res, "Unable to produce a verifiable credential");

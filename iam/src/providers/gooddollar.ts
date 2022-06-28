@@ -3,12 +3,15 @@ import type { Provider, ProviderOptions } from "../types";
 import type { RequestPayload, VerifiedPayload } from "@gitcoin/passport-types";
 
 // ------ Ethers Library
-import { utils, Contract } from "ethers";
+import { Contract } from "ethers";
 import { StaticJsonRpcProvider } from "@ethersproject/providers";
 
 // ------ GoodDollar identity ABI & Address
+import Contracts from "@gooddollar/goodprotocol/releases/deployment.json";
 import Identity from "@gooddollar/goodprotocol/artifacts/contracts/Interfaces.sol/IIdentity.json";
-const IDENTITY_ADDRESS_FUSE = "0xFa8d865A962ca8456dF331D78806152d3aC5B84F";
+
+type EnvKey = keyof typeof Contracts;
+const IDENTITY_ADDRESS_FUSE = Contracts[(process.env.GOODDOLLAR_ENV || "fuse") as EnvKey].Identity;
 
 const fuse_rpc = process.env.RPC_FUSE_URL || "https://rpc.fuse.io"; //TODO: add env to build-process
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { Router } from "react-router-dom";
+import { Router, MemoryRouter } from "react-router-dom";
 import { createMemoryHistory } from "history";
 import { render, screen, fireEvent, waitFor, waitForElementToBeRemoved, act } from "@testing-library/react";
 import { GoodDollarCard } from "../../../components/ProviderCards";
@@ -71,7 +71,7 @@ describe("when user has not verfied with GoodDollarProvider", () => {
       </Router>
     );
 
-    const verifyButton = screen.queryByTestId("button-verify-gooddollar");
+    const verifyButton = screen.queryByTestId("button-getverified-gooddollar");
 
     expect(verifyButton).toBeInTheDocument();
   });
@@ -97,7 +97,7 @@ describe("when user has verified with GoodDollarProvider", () => {
       </Router>
     );
 
-    const verified = screen.queryByText(/Verified/);
+    const verified = screen.getByText("Verified");
 
     expect(verified).toBeInTheDocument();
   });
@@ -117,9 +117,13 @@ describe("when the verify button is clicked", () => {
       </Router>
     );
 
-    const initialVerifyButton = screen.queryByTestId("button-verify-gooddollar");
+    const initialVerifyButton = screen.queryByTestId("button-getverified-gooddollar");
 
     fireEvent.click(initialVerifyButton!);
+
+    const verifyButton = screen.queryByTestId("button-verify-gooddollar");
+
+    fireEvent.click(verifyButton!);
 
     expect(window.location.toString().includes("https://wallet.gooddollar.org")).toBeTruthy();
   });
@@ -131,21 +135,37 @@ describe("when the verify button is clicked", () => {
 
     it("after returned from succesfull login, VC is issued and stamp is added after which the success toast is displayed ", async () => {
       window.location.assign(
-        "http://localhost/#/dashboard?login=" +
+        "http://localhost/dashboard?login=" +
           Buffer.from(JSON.stringify(sampleGooddollarSignedObject)).toString("base64")
       );
-      const setItem = jest.spyOn(Object.getPrototypeOf(localStorage), "setItem");
 
       await act(
         async () =>
           render(
-            <Router location={history.location} navigator={history}>
+            <MemoryRouter
+              initialEntries={[
+                "/dashboard?login=" + Buffer.from(JSON.stringify(sampleGooddollarSignedObject)).toString("base64"),
+              ]}
+              initialIndex={0}
+            >
               <UserContext.Provider value={mockUserContext}>
                 <GoodDollarCard />
               </UserContext.Provider>
-            </Router>
+            </MemoryRouter>
           ) as any
       );
+
+      // Wait to see the verify button on the modal
+      await waitFor(
+        () => {
+          const verifyModalButton = screen.getByTestId("modal-verify");
+          expect(verifyModalButton).toBeInTheDocument();
+        },
+        { timeout: 2000 }
+      );
+
+      // Click the verify button on modal
+      fireEvent.click(screen.getByTestId("modal-verify"));
 
       await waitFor(() => {
         expect(handleAddStamp).toBeCalled();
@@ -168,11 +188,16 @@ describe("when the verify button is clicked", () => {
       await act(
         async () =>
           render(
-            <Router location={history.location} navigator={history}>
+            <MemoryRouter
+              initialEntries={[
+                "/dashboard?login=" + Buffer.from(JSON.stringify(sampleBadGooddollarSignedObject)).toString("base64"),
+              ]}
+              initialIndex={0}
+            >
               <UserContext.Provider value={mockUserContext}>
                 <GoodDollarCard />
               </UserContext.Provider>
-            </Router>
+            </MemoryRouter>
           ) as any
       );
 
@@ -189,7 +214,11 @@ describe("when the verify button is clicked", () => {
       (fetchVerifiableCredential as jest.Mock).mockRejectedValue("ERROR");
 
       window.location.assign(
-        "http://localhost/#/dashboard?login=" +
+        "http://localhost/dashboard?login=" +
+          Buffer.from(JSON.stringify(sampleGooddollarSignedObject)).toString("base64")
+      );
+      history.push(
+        "http://localhost/dashboard?login=" +
           Buffer.from(JSON.stringify(sampleGooddollarSignedObject)).toString("base64")
       );
 

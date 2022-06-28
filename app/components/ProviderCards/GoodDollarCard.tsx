@@ -43,8 +43,8 @@ export default function GoodDollarCard(): JSX.Element {
   // console.log({ isWhitelisted, address, credentialResponseIsLoading, searchParams }, searchParams.get("login"));
   //TODO: verify all these details
   const gooddollarLinkDev = createLoginLink({
-    redirectLink: Envs[process.env.NEXT_PUBLIC_GOODDOLLAR_ENV || "fuse"] + "/AppNavigation/LoginRedirect",
-    v: "gitcoin-hackaton-test",
+    redirectLink: Envs[process.env.NEXT_PUBLIC_GOODDOLLAR_ENV || "fuse"].dappUrl + "/AppNavigation/LoginRedirect",
+    v: "Gitcoin Passport",
     web: "https://passport.gitcoin.co",
     id: "",
     r: [],
